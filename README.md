@@ -207,3 +207,21 @@ app.listen(port, () => {
 });
 
 ```
+
+# 3. Custom 404 middleware
+
+Add a piece of custom 404 middleware at _end_ of application to fix connection hangs when we attempt to navigate to unavailable resource (example: /api/users/4)
+
+## Add this in index.js before app.listen()
+
+```
+// Custom 404 (not found) middleware.
+// Since we place this last, it will only process
+// if no other routes have already sent a response!
+// We also don't need next(), since this is the
+// last stop along the request-response cycle.
+app.use((req, res) => {
+  res.status(404);
+  res.json({ error: "Resource Not Found" });
+});
+```
