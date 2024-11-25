@@ -54,8 +54,45 @@ app.use("/api", function (req, res, next) {
 app.use("/api/users", users);
 app.use("/api/posts", posts);
 
+// Adding some HATEOAS links.
 app.get("/", (req, res) => {
-  res.send("Work in progress!");
+  res.json({
+    links: [
+      {
+        href: "/api",
+        rel: "api",
+        type: "GET",
+      },
+    ],
+  });
+});
+
+// Adding some HATEOAS links.
+app.get("/api", (req, res) => {
+  res.json({
+    links: [
+      {
+        href: "api/users",
+        rel: "users",
+        type: "GET",
+      },
+      {
+        href: "api/users",
+        rel: "users",
+        type: "POST",
+      },
+      {
+        href: "api/posts",
+        rel: "posts",
+        type: "GET",
+      },
+      {
+        href: "api/posts",
+        rel: "posts",
+        type: "POST",
+      },
+    ],
+  });
 });
 
 // 404 Middleware
