@@ -544,3 +544,12 @@ app.listen(port, () => {
 });
 
 ```
+
+## We can use [ReqBin](https://reqbin.com/post-online) to live-test API.
+
+Examples:
+
+- [GET Example](https://reqbin.com/wovaj2jz)
+- [POST Example](https://reqbin.com/fy6fpzky)
+- [PATCH Example](https://reqbin.com/l9xyoakv)
+- [DELETE Example](https://reqbin.com/u8woypi3)
