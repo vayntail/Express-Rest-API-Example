@@ -1,17 +1,18 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 
-const users = require("./data/users");
-const posts = require("./data/posts");
+// These are now route imports, not database imports!
+const users = require("./routes/users");
+const posts = require("./routes/posts");
 
 const app = express();
 const port = 3000;
 
+// Parsing Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ extended: true }));
 
-// New logging middleware to help us keep track of
-// requests during testing!
+// Logging Middlewaare
 app.use((req, res, next) => {
   const time = new Date();
 
@@ -26,117 +27,43 @@ ${time.toLocaleTimeString()}: Received a ${req.method} request to ${req.url}.`
   next();
 });
 
-app
-  .route("/api/users")
-  .get((req, res) => {
-    res.json(users);
-  })
-  .post((req, res) => {
-    if (req.body.name && req.body.username && req.body.email) {
-      if (users.find((u) => u.username == req.body.username)) {
-        res.json({ error: "Username Already Taken" });
-        return;
-      }
+// Valid API Keys.
+apiKeys = ["perscholas", "ps-example", "hJAsknw-L198sAJD-l3kasx"];
 
-      const user = {
-        id: users[users.length - 1].id + 1,
-        name: req.body.name,
-        username: req.body.username,
-        email: req.body.email,
-      };
+// New middleware to check for API keys!
+// Note that if the key is not verified,
+// we do not call next(); this is the end.
+// This is why we attached the /api/ prefix
+// to our routing at the beginning!
+app.use("/api", function (req, res, next) {
+  var key = req.query["api-key"];
 
-      users.push(user);
-      res.json(users[users.length - 1]);
-    } else res.json({ error: "Insufficient Data" });
-  });
+  // Check for the absence of a key.
+  if (!key) {
+    res.status(400);
+    return res.json({ error: "API Key Required" });
+  }
 
-app
-  .route("/api/users/:id")
-  .get((req, res, next) => {
-    const user = users.find((u) => u.id == req.params.id);
-    if (user) res.json(user);
-    else next();
-  })
-  .patch((req, res, next) => {
-    const user = users.find((u, i) => {
-      if (u.id == req.params.id) {
-        for (const key in req.body) {
-          users[i][key] = req.body[key];
-        }
-        return true;
-      }
-    });
+  // Check for key validity.
+  if (apiKeys.indexOf(key) === -1) {
+    res.status(401);
+    return res.json({ error: "Invalid API Key" });
+  }
 
-    if (user) res.json(user);
-    else next();
-  })
-  .delete((req, res, next) => {
-    const user = users.find((u, i) => {
-      if (u.id == req.params.id) {
-        users.splice(i, 1);
-        return true;
-      }
-    });
+  // Valid key! Store it in req.key for route access.
+  req.key = key;
+  next();
+});
 
-    if (user) res.json(user);
-    else next();
-  });
-
-app
-  .route("/api/posts")
-  .get((req, res) => {
-    res.json(posts);
-  })
-  .post((req, res) => {
-    if (req.body.userId && req.body.title && req.body.content) {
-      const post = {
-        id: posts[posts.length - 1].id + 1,
-        userId: req.body.userId,
-        title: req.body.title,
-        content: req.body.content,
-      };
-
-      posts.push(post);
-      res.json(posts[posts.length - 1]);
-    } else res.json({ error: "Insufficient Data" });
-  });
-
-app
-  .route("/api/posts/:id")
-  .get((req, res, next) => {
-    const post = posts.find((p) => p.id == req.params.id);
-    if (post) res.json(post);
-    else next();
-  })
-  .patch((req, res, next) => {
-    const post = posts.find((p, i) => {
-      if (p.id == req.params.id) {
-        for (const key in req.body) {
-          posts[i][key] = req.body[key];
-        }
-        return true;
-      }
-    });
-
-    if (post) res.json(post);
-    else next();
-  })
-  .delete((req, res, next) => {
-    const post = posts.find((p, i) => {
-      if (p.id == req.params.id) {
-        posts.splice(i, 1);
-        return true;
-      }
-    });
-
-    if (post) res.json(post);
-    else next();
-  });
+// Use our Routes
+app.use("/api/users", users);
+app.use("/api/posts", posts);
 
 app.get("/", (req, res) => {
   res.send("Work in progress!");
 });
 
+// 404 Middleware
 app.use((req, res) => {
   res.status(404);
   res.json({ error: "Resource Not Found" });
